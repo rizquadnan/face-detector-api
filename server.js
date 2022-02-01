@@ -1,9 +1,12 @@
 const express = require('express')
 const { v4: uuidv4 } = require('uuid')
+const bcrypt = require('bcrypt')
+
+const PORT = 3001
+const SALT_ROUNDS = 10
+const API_BASE_URL = '/api/v1/'
 
 const app = express()
-const PORT = 3001
-const API_BASE_URL = '/api/v1/'
 
 const createUser = ({
   id = uuidv4(),
@@ -12,14 +15,21 @@ const createUser = ({
   password,
   uploadEntries = 0,
   joinDate = new Date().toDateString(),
-}) => ({
-  id,
-  name,
-  email,
-  password,
-  uploadEntries,
-  joinDate,
-})
+}) => {
+  return bcrypt
+    .hash(password, SALT_ROUNDS)
+    .then((hash) => {
+      return {
+        id,
+        name,
+        email,
+        password: hash,
+        uploadEntries,
+        joinDate,
+      }
+    })
+    .catch((error) => console.log('Failed to create user', error))
+}
 
 const createResponse = ({ status, description = '', data = {} }) => ({
   status,
@@ -27,7 +37,7 @@ const createResponse = ({ status, description = '', data = {} }) => ({
   data,
 })
 
-const users = [
+const usersInitPromise = [
   createUser({
     name: 'budi',
     email: 'budi@gmail.com',
@@ -40,6 +50,11 @@ const users = [
   }),
 ]
 
+let users
+Promise.all(usersInitPromise).then((values) => {
+  users = values
+})
+
 app.use(express.json())
 
 app.get('/health', (req, res) => {
@@ -47,11 +62,24 @@ app.get('/health', (req, res) => {
 })
 
 app.post(`${API_BASE_URL}sign-in`, (req, res) => {
-  const { email, password } = req.body
-
+  const { email, password: inputtedPassword } = req.body
   const user = users.find((user) => user.email === email)
-  if (user && user.password === password) {
-    res.send(createResponse({ status: 'SUCCESS', data: user }))
+
+  if (user) {
+    bcrypt.compare(inputtedPassword, user.password).then((isIdentical) => {
+      if (isIdentical) {
+        const { password, ...returnedUser } = user
+
+        res.send(createResponse({ status: 'SUCCESS', data: returnedUser }))
+      } else {
+        res.status(404).send(
+          createResponse({
+            status: 'FAILED',
+            description: 'Email or password incorrect',
+          }),
+        )
+      }
+    })
   } else {
     res.status(404).send(
       createResponse({
@@ -66,10 +94,23 @@ app.post(`${API_BASE_URL}register`, (req, res) => {
   const { name, email, password } = req.body
 
   if (name && email && password) {
-    const user = createUser({ name, email, password })
-    users.push(user)
-
-    res.send(createResponse({ status: 'SUCCESS', data: user }))
+    createUser({ name, email, password })
+      .then((user) => {
+        users.push(user);
+        const { password, ...returnedUser } = user;
+        
+        res.send(createResponse({ status: 'SUCCESS', data: returnedUser }))
+      })
+      .catch((error) => {
+        res
+          .status(404)
+          .send(
+            createResponse({
+              status: 'FAILED',
+              description: 'Input not valid',
+            }),
+          )
+      })
   } else {
     res
       .status(404)
