@@ -1,7 +1,8 @@
 const express = require('express')
 
 const app = express()
-const PORT = 3001
+const PORT = 3001;
+const API_BASE_URL = "/api/v1/";
 
 const createUser = ({ name, email, password, uploadEntries, joinDate }) => ({
   name,
@@ -40,7 +41,7 @@ app.get('/health', (req, res) => {
   res.send('OK')
 })
 
-app.get('/api/sign-in', (req, res) => {
+app.get(`${API_BASE_URL}sign-in`, (req, res) => {
   const { email, password } = req.body
 
   const user = users.find((user) => user.email === email)
@@ -54,8 +55,8 @@ app.get('/api/sign-in', (req, res) => {
           status: 'FAILED',
           description: 'Email or password incorrect',
         }),
-      )
+      ) 
   }
-})
+});
 
 app.listen(PORT, () => console.log(`> Listening on port ${PORT}`))
