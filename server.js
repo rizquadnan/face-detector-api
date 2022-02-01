@@ -1,10 +1,12 @@
 const express = require('express')
+const { v4: uuidv4 } = require('uuid');
 
 const app = express()
 const PORT = 3001;
 const API_BASE_URL = "/api/v1/";
 
-const createUser = ({ name, email, password, uploadEntries = 0, joinDate = new Date().toDateString() }) => ({
+const createUser = ({ id = uuidv4(), name, email, password, uploadEntries = 0, joinDate = new Date().toDateString() }) => ({
+  id, 
   name,
   email,
   password,
@@ -65,6 +67,17 @@ app.post(`${API_BASE_URL}register`, (req, res) => {
     res.send(createResponse({ status: "SUCCESS", data: user }))
   } else {
     res.status(404).send(createResponse({ status: "FAILED", description: "Input not valid" }))
+  }
+});
+
+app.get(`${API_BASE_URL}user/:id`, (req, res) => {
+  const { id } = req.params;
+
+  const user = users.find(user => user.id === id);
+  if (user) {
+    res.send(createResponse({ status: "SUCCESS", data: user}))
+  } else {
+    res.status(404).send(createResponse({ status: "FAILED", description: "User not found" }))
   }
 });
 
