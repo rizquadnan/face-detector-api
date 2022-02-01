@@ -4,7 +4,7 @@ const app = express()
 const PORT = 3001;
 const API_BASE_URL = "/api/v1/";
 
-const createUser = ({ name, email, password, uploadEntries, joinDate }) => ({
+const createUser = ({ name, email, password, uploadEntries = 0, joinDate = new Date().toDateString() }) => ({
   name,
   email,
   password,
@@ -23,15 +23,11 @@ const users = [
     name: 'budi',
     email: 'budi@gmail.com',
     password: 'budi12',
-    uploadEntries: 0,
-    joinDate: new Date().toDateString(),
   }),
   createUser({
     name: 'riani',
     email: 'riani@gmail.com',
     password: 'riani12',
-    uploadEntries: 0,
-    joinDate: new Date().toDateString(),
   }),
 ]
 
@@ -56,6 +52,19 @@ app.get(`${API_BASE_URL}sign-in`, (req, res) => {
           description: 'Email or password incorrect',
         }),
       ) 
+  }
+});
+
+app.post(`${API_BASE_URL}register`, (req, res) => {
+  const { name, email, password } = req.body;
+
+  if (name && email && password) {
+    const user = createUser({ name, email, password });
+    users.push(user);
+
+    res.send(createResponse({ status: "SUCCESS", data: user }))
+  } else {
+    res.status(404).send(createResponse({ status: "FAILED", description: "Input not valid" }))
   }
 });
 
