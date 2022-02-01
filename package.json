@@ -1,0 +1,17 @@
+{
+  "name": "face-detector-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "adnan <rizquadnan@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "express": "^4.17.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}
