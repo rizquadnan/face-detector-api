@@ -81,4 +81,22 @@ app.get(`${API_BASE_URL}user/:id`, (req, res) => {
   }
 });
 
+app.put(`${API_BASE_URL}user/:id`, (req, res) => {
+  const { id } = req.params;
+  const changedUser = req.body;
+
+  const userIndex = users.findIndex(user => user.id === id);
+
+  if (userIndex !== -1) {
+    users[userIndex] = {
+      ...changedUser,
+      id
+    };
+
+    res.send(createResponse({ status: "SUCCESS", data: changedUser}))
+  } else {
+    res.status(404).send(createResponse({ status: "FAILED", description: "User not found" }))
+  }
+});
+
 app.listen(PORT, () => console.log(`> Listening on port ${PORT}`))
