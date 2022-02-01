@@ -37,7 +37,7 @@ app.get('/health', (req, res) => {
   res.send('OK')
 })
 
-app.get(`${API_BASE_URL}sign-in`, (req, res) => {
+app.post(`${API_BASE_URL}sign-in`, (req, res) => {
   const { email, password } = req.body
 
   const user = users.find((user) => user.email === email)
