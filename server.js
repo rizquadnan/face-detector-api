@@ -1,10 +1,61 @@
-const express = require("express");
+const express = require('express')
 
-const app = express();
-const PORT = 3001;
+const app = express()
+const PORT = 3001
 
-app.get("/health", (req, res) => {
-  res.send("OK");
+const createUser = ({ name, email, password, uploadEntries, joinDate }) => ({
+  name,
+  email,
+  password,
+  uploadEntries,
+  joinDate,
 })
 
-app.listen(PORT, () => console.log(`> Listening on port ${PORT}`));
+const createResponse = ({ status, description = '', data = {} }) => ({
+  status,
+  description,
+  data,
+})
+
+const users = [
+  createUser({
+    name: 'budi',
+    email: 'budi@gmail.com',
+    password: 'budi12',
+    uploadEntries: 0,
+    joinDate: new Date().toDateString(),
+  }),
+  createUser({
+    name: 'riani',
+    email: 'riani@gmail.com',
+    password: 'riani12',
+    uploadEntries: 0,
+    joinDate: new Date().toDateString(),
+  }),
+]
+
+app.use(express.json())
+
+app.get('/health', (req, res) => {
+  res.send('OK')
+})
+
+app.get('/api/sign-in', (req, res) => {
+  const { email, password } = req.body
+
+  const user = users.find((user) => user.email === email)
+  if (user && user.password === password) {
+    res.send(createResponse({ status: 'SUCCESS', data: user }))
+  } else {
+    res
+      .status(404)
+      .send(
+        createResponse({
+          status: 'FAILED',
+          description: 'Email or password incorrect',
+        }),
+      )
+  }
+})
+
+app.listen(PORT, () => console.log(`> Listening on port ${PORT}`))
