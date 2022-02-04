@@ -1,6 +1,7 @@
 const express = require('express')
 const { v4: uuidv4 } = require('uuid')
 const bcrypt = require('bcrypt')
+const cors = require('cors')
 
 const PORT = 3001
 const SALT_ROUNDS = 10
@@ -56,6 +57,7 @@ Promise.all(usersInitPromise).then((values) => {
 })
 
 app.use(express.json())
+app.use(cors())
 
 app.get('/health', (req, res) => {
   res.send('OK')
@@ -96,20 +98,18 @@ app.post(`${API_BASE_URL}register`, (req, res) => {
   if (name && email && password) {
     createUser({ name, email, password })
       .then((user) => {
-        users.push(user);
-        const { password, ...returnedUser } = user;
-        
+        users.push(user)
+        const { password, ...returnedUser } = user
+
         res.send(createResponse({ status: 'SUCCESS', data: returnedUser }))
       })
       .catch((error) => {
-        res
-          .status(404)
-          .send(
-            createResponse({
-              status: 'FAILED',
-              description: 'Input not valid',
-            }),
-          )
+        res.status(404).send(
+          createResponse({
+            status: 'FAILED',
+            description: 'Input not valid',
+          }),
+        )
       })
   } else {
     res
