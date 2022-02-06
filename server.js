@@ -142,9 +142,10 @@ app.put(`${API_BASE_URL}user/:id`, (req, res) => {
   if (userIndex !== -1) {
     users[userIndex] = {
       ...changedUser,
+      password: users[userIndex].password,
       id,
-    }
-
+    };
+    
     res.send(createResponse({ status: 'SUCCESS', data: changedUser }))
   } else {
     res
