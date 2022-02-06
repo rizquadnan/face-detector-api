@@ -5,13 +5,13 @@ const cors = require('cors')
 const db = require('knex')({
   client: 'pg',
   connection: {
-    host : '127.0.0.1',
-    port : 5432,
-    user : '',
-    password : '',
-    database : 'face-recognition'
-  }
-});
+    host: '127.0.0.1',
+    port: 5432,
+    user: '',
+    password: '',
+    database: 'face-recognition',
+  },
+})
 
 const PORT = 3001
 const SALT_ROUNDS = 10
@@ -102,25 +102,45 @@ app.post(`${API_BASE_URL}sign-in`, (req, res) => {
   }
 })
 
-app.post(`${API_BASE_URL}register`, (req, res) => {
+app.post(`${API_BASE_URL}register`, async (req, res) => {
   const { name, email, password } = req.body
 
   if (name && email && password) {
-    createUser({ name, email, password })
-      .then((user) => {
-        users.push(user)
-        const { password, ...returnedUser } = user
+    const user = await createUser({ name, email, password })
 
-        res.send(createResponse({ status: 'SUCCESS', data: returnedUser }))
-      })
-      .catch((error) => {
-        res.status(404).send(
+    try {
+      await db.transaction(async (trx) => {
+        await trx.insert({ email, hash: user.password }).into('login')
+        
+        const result = await trx
+          .returning('*')
+          .insert({ name, email, joindate: new Date() })
+          .into('users')
+
+        res.send(
           createResponse({
-            status: 'FAILED',
-            description: 'Input not valid',
+            status: 'SUCCESS',
+            data: result[0],
           }),
         )
       })
+    } catch (error) {
+      if (error.code === '23505') {
+        res.status(400).send(
+          createResponse({
+            status: 'FAILED',
+            description: 'Email already exists',
+          }),
+        )
+      } else {
+        res.status(404).send(
+          createResponse({
+            status: 'FAILED',
+            description: 'Failed to register user',
+          }),
+        )
+      }
+    }
   } else {
     res
       .status(404)
@@ -154,7 +174,7 @@ app.put(`${API_BASE_URL}user/:id`, (req, res) => {
       ...changedUser,
       password: users[userIndex].password,
       id,
-    };
+    }
 
     res.send(createResponse({ status: 'SUCCESS', data: changedUser }))
   } else {
