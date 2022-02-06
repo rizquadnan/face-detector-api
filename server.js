@@ -73,32 +73,41 @@ app.get('/health', (req, res) => {
   res.send('OK')
 })
 
-app.post(`${API_BASE_URL}sign-in`, (req, res) => {
+app.post(`${API_BASE_URL}sign-in`, async (req, res) => {
   const { email, password: inputtedPassword } = req.body
-  const user = users.find((user) => user.email === email)
 
-  if (user) {
-    bcrypt.compare(inputtedPassword, user.password).then((isIdentical) => {
+  try {
+    const result = await db('login').where({ email }).select('hash')
+    const userPasswordHash = result[0].hash
+
+    if (userPasswordHash) {
+      const isIdentical = await bcrypt.compare(inputtedPassword, userPasswordHash);
+
       if (isIdentical) {
-        const { password, ...returnedUser } = user
+        const result = await db('users').where({ email })
+        res.send(createResponse({ status: 'SUCCESS', data: result[0] }));
 
-        res.send(createResponse({ status: 'SUCCESS', data: returnedUser }))
-      } else {
-        res.status(404).send(
-          createResponse({
-            status: 'FAILED',
-            description: 'Email or password incorrect',
-          }),
-        )
-      }
-    })
-  } else {
-    res.status(404).send(
-      createResponse({
-        status: 'FAILED',
-        description: 'Email or password incorrect',
-      }),
-    )
+        return;
+      } 
+    }
+
+    throw new Error("404");
+  } catch (error) {
+    if (error.message === "404") {
+      res.status(404).send(
+        createResponse({
+          status: 'FAILED',
+          description: 'Email or password incorrect',
+        }),
+      )
+    } else {
+      res.status(500).send(
+        createResponse({
+          status: 'FAILED',
+          description: 'Failed to sign in',
+        }),
+      )
+    }
   }
 })
 
@@ -111,7 +120,7 @@ app.post(`${API_BASE_URL}register`, async (req, res) => {
     try {
       await db.transaction(async (trx) => {
         await trx.insert({ email, hash: user.password }).into('login')
-        
+
         const result = await trx
           .returning('*')
           .insert({ name, email, joindate: new Date() })
