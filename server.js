@@ -2,6 +2,16 @@ const express = require('express')
 const { v4: uuidv4 } = require('uuid')
 const bcrypt = require('bcrypt')
 const cors = require('cors')
+const db = require('knex')({
+  client: 'pg',
+  connection: {
+    host : '127.0.0.1',
+    port : 5432,
+    user : '',
+    password : '',
+    database : 'face-recognition'
+  }
+});
 
 const PORT = 3001
 const SALT_ROUNDS = 10
@@ -145,7 +155,7 @@ app.put(`${API_BASE_URL}user/:id`, (req, res) => {
       password: users[userIndex].password,
       id,
     };
-    
+
     res.send(createResponse({ status: 'SUCCESS', data: changedUser }))
   } else {
     res
