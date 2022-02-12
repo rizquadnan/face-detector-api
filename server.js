@@ -164,13 +164,13 @@ app.post(`${API_BASE_URL}register`, async (req, res) => {
 
 app.put(`${API_BASE_URL}user/:id`, async (req, res) => {
   const { id } = req.params
-  const { uploadEntries } = req.body
+  const { uploadentries } = req.body
 
   try {
     const result = await db('users')
       .where({ id })
       .returning('*')
-      .update({ uploadentries: uploadEntries })
+      .update({ uploadentries })
 
     if (result.length > 0) {
       res.send(
