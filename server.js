@@ -14,6 +14,11 @@ const db = require('knex')({
   },
 })
 
+const {ClarifaiStub, grpc} = require("clarifai-nodejs-grpc");
+const stub = ClarifaiStub.grpc();
+const metadata = new grpc.Metadata();
+metadata.set("authorization", "Key e3e2fff270c541c4ab887d0ab7c1fbf2");
+
 const JWT_PRIVATE_KEY = 'adnan-keren'
 const PORT = 3001
 const SALT_ROUNDS = 10
@@ -309,5 +314,30 @@ app.put(
     }
   },
 )
+
+app.post(`${API_BASE_URL}detect-face`, (req, res) => {
+  const { imageUrl } = req.body;
+
+  stub.PostModelOutputs(
+    {
+        model_id: "a403429f2ddf4b49b307e318f00e528b",
+        inputs: [{data: {image: {url: imageUrl }}}]
+    },
+    metadata,
+    (err, response) => {
+        if (err) {
+          res.status(500).send(createResponse({
+            status: "FAILED",
+            description: "Failed to detect face"
+          }))
+        }
+  
+        res.send(createResponse({
+          status: "SUCCESS",
+          data: response.outputs[0].data.regions.map(region => region.region_info.bounding_box)
+        }))
+    }
+  );
+})
 
 app.listen(PORT, () => console.log(`> Listening on port ${PORT}`))
