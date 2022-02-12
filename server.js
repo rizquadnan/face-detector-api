@@ -2,6 +2,7 @@ const express = require('express')
 const { v4: uuidv4 } = require('uuid')
 const bcrypt = require('bcrypt')
 const cors = require('cors')
+const jwt = require('jsonwebtoken')
 const db = require('knex')({
   client: 'pg',
   connection: {
@@ -13,6 +14,7 @@ const db = require('knex')({
   },
 })
 
+const JWT_PRIVATE_KEY = 'adnan-keren'
 const PORT = 3001
 const SALT_ROUNDS = 10
 const API_BASE_URL = '/api/v1/'
@@ -47,6 +49,61 @@ const createResponse = ({ status, description = '', data = {} }) => ({
   description,
   data,
 })
+
+const jwtSign = (dataToBeSigned, callback) => {
+  jwt.sign(
+    dataToBeSigned,
+    JWT_PRIVATE_KEY,
+    { expiresIn: '1d' },
+    callback);
+}
+
+const verifyAuthorizationHeaders = async (req, res, next) => {
+  const hasAuthorizationHeaders = req.headers?.authorization
+
+  if (!hasAuthorizationHeaders) {
+    req.isUserAuthenticated = false
+
+    next()
+
+    return
+  }
+
+  const token = req.headers.authorization
+
+  jwt.verify(token, JWT_PRIVATE_KEY, async (err, decode) => {
+    if (err) {
+      req.isUserAuthenticated = false
+
+      next()
+
+      return
+    }
+
+    const result = await db('users').where({ id: decode.id })
+
+    if (result.length > 0) {
+      req.isUserAuthenticated = true
+    } else {
+      req.isUserAuthenticated = false
+    }
+
+    next()
+  })
+}
+
+const onAuthorizationVerificationComplete = (req, res, next) => {
+  if (!req.isUserAuthenticated) {
+    res.status(403).send(
+      createResponse({
+        status: 'FAILED',
+        description: 'Unauthorised access',
+      }),
+    )
+  } else {
+    next()
+  }
+}
 
 const usersInitPromise = [
   createUser({
@@ -88,7 +145,33 @@ app.post(`${API_BASE_URL}sign-in`, async (req, res) => {
 
       if (isIdentical) {
         const result = await db('users').where({ email })
-        res.send(createResponse({ status: 'SUCCESS', data: result[0] }))
+        const user = result[0]
+
+        jwtSign(
+          { id: user.id },
+          function (err, token) {
+            if (err) {
+              res.status(500).send(
+                createResponse({
+                  status: 'FAILED',
+                  description: 'Failed to sign in',
+                }),
+              )
+
+              return
+            }
+
+            res.send(
+              createResponse({
+                status: 'SUCCESS',
+                data: {
+                  user,
+                  token,
+                },
+              }),
+            )
+          },
+        )
 
         return
       }
@@ -129,11 +212,32 @@ app.post(`${API_BASE_URL}register`, async (req, res) => {
           .insert({ name, email, joindate: new Date() })
           .into('users')
 
-        res.send(
-          createResponse({
-            status: 'SUCCESS',
-            data: result[0],
-          }),
+        const userResult = result[0]
+
+        jwtSign(
+          { id: userResult.id },
+          function (err, token) {
+            if (err) {
+              res.status(500).send(
+                createResponse({
+                  status: 'FAILED',
+                  description: 'Failed to register user',
+                }),
+              )
+
+              return
+            }
+
+            res.send(
+              createResponse({
+                status: 'SUCCESS',
+                data: {
+                  user: userResult,
+                  token,
+                },
+              }),
+            )
+          },
         )
       })
     } catch (error) {
@@ -162,45 +266,48 @@ app.post(`${API_BASE_URL}register`, async (req, res) => {
   }
 })
 
-app.put(`${API_BASE_URL}user/:id`, async (req, res) => {
-  const { id } = req.params
-  const { uploadentries } = req.body
+app.put(
+  `${API_BASE_URL}user/:id`,
+  verifyAuthorizationHeaders,
+  onAuthorizationVerificationComplete,
+  async (req, res) => {
+    const { id } = req.params
+    const { uploadentries } = req.body
 
-  try {
-    const result = await db('users')
-      .where({ id })
-      .returning('*')
-      .update({ uploadentries })
+    try {
+      const result = await db('users')
+        .where({ id })
+        .returning('*')
+        .update({ uploadentries })
 
-    if (result.length > 0) {
-      res.send(
-        createResponse({
-          status: 'SUCCESS',
-          data: result,
-        }),
-      )
-    } else {
-      throw new Error('user not found')
-    }
-  } catch (error) {
-    if (error.message === 'user not found') {
-      res.status(404).send(
-        createResponse({
-          status: 'FAILED',
-          description: 'User not found',
-        }),
-      )
-    } else {
-      res
-        .status(500)
-        .send(
+      if (result.length > 0) {
+        res.send(
+          createResponse({
+            status: 'SUCCESS',
+            data: result,
+          }),
+        )
+      } else {
+        throw new Error('user not found')
+      }
+    } catch (error) {
+      if (error.message === 'user not found') {
+        res.status(404).send(
+          createResponse({
+            status: 'FAILED',
+            description: 'User not found',
+          }),
+        )
+      } else {
+        res.status(500).send(
           createResponse({
             status: 'FAILED',
             description: 'Failed to update user',
           }),
         )
+      }
     }
-  }
-})
+  },
+)
 
 app.listen(PORT, () => console.log(`> Listening on port ${PORT}`))
