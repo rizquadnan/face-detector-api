@@ -81,19 +81,22 @@ app.post(`${API_BASE_URL}sign-in`, async (req, res) => {
     const userPasswordHash = result[0].hash
 
     if (userPasswordHash) {
-      const isIdentical = await bcrypt.compare(inputtedPassword, userPasswordHash);
+      const isIdentical = await bcrypt.compare(
+        inputtedPassword,
+        userPasswordHash,
+      )
 
       if (isIdentical) {
         const result = await db('users').where({ email })
-        res.send(createResponse({ status: 'SUCCESS', data: result[0] }));
+        res.send(createResponse({ status: 'SUCCESS', data: result[0] }))
 
-        return;
-      } 
+        return
+      }
     }
 
-    throw new Error("404");
+    throw new Error('404')
   } catch (error) {
-    if (error.message === "404") {
+    if (error.message === '404') {
       res.status(404).send(
         createResponse({
           status: 'FAILED',
@@ -159,37 +162,44 @@ app.post(`${API_BASE_URL}register`, async (req, res) => {
   }
 })
 
-app.get(`${API_BASE_URL}user/:id`, (req, res) => {
+app.put(`${API_BASE_URL}user/:id`, async (req, res) => {
   const { id } = req.params
+  const { uploadEntries } = req.body
 
-  const user = users.find((user) => user.id === id)
-  if (user) {
-    res.send(createResponse({ status: 'SUCCESS', data: user }))
-  } else {
-    res
-      .status(404)
-      .send(createResponse({ status: 'FAILED', description: 'User not found' }))
-  }
-})
+  try {
+    const result = await db('users')
+      .where({ id })
+      .returning('*')
+      .update({ uploadentries: uploadEntries })
 
-app.put(`${API_BASE_URL}user/:id`, (req, res) => {
-  const { id } = req.params
-  const changedUser = req.body
-
-  const userIndex = users.findIndex((user) => user.id === id)
-
-  if (userIndex !== -1) {
-    users[userIndex] = {
-      ...changedUser,
-      password: users[userIndex].password,
-      id,
+    if (result.length > 0) {
+      res.send(
+        createResponse({
+          status: 'SUCCESS',
+          data: result,
+        }),
+      )
+    } else {
+      throw new Error('user not found')
     }
-
-    res.send(createResponse({ status: 'SUCCESS', data: changedUser }))
-  } else {
-    res
-      .status(404)
-      .send(createResponse({ status: 'FAILED', description: 'User not found' }))
+  } catch (error) {
+    if (error.message === 'user not found') {
+      res.status(404).send(
+        createResponse({
+          status: 'FAILED',
+          description: 'User not found',
+        }),
+      )
+    } else {
+      res
+        .status(500)
+        .send(
+          createResponse({
+            status: 'FAILED',
+            description: 'Failed to update user',
+          }),
+        )
+    }
   }
 })
 
