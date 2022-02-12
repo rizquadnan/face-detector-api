@@ -142,7 +142,7 @@ app.post(`${API_BASE_URL}register`, async (req, res) => {
           }),
         )
       } else {
-        res.status(404).send(
+        res.status(500).send(
           createResponse({
             status: 'FAILED',
             description: 'Failed to register user',
@@ -152,7 +152,7 @@ app.post(`${API_BASE_URL}register`, async (req, res) => {
     }
   } else {
     res
-      .status(404)
+      .status(400)
       .send(
         createResponse({ status: 'FAILED', description: 'Input not valid' }),
       )
