@@ -30,7 +30,6 @@ module.exports = {
           }),
         )
       } else {
-        console.log(error);
         res.status(500).send(
           utils.createResponse({
             status: 'FAILED',

@@ -23,7 +23,6 @@ module.exports = {
             token,
           ) {
             if (err) {
-              console.log("masuk sini", err);
               res.status(500).send(
                 utils.createResponse({
                   status: 'FAILED',

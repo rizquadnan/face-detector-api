@@ -5,7 +5,6 @@ module.exports = {
     data,
   }),
   jwtSign: (jwt, dataToBeSigned, JWT_PRIVATE_KEY, callback) => {
-    console.log("dataToBeSigned", dataToBeSigned);
     jwt.sign(dataToBeSigned, JWT_PRIVATE_KEY, { expiresIn: '1d' }, callback)
   },
   createUser: (bcrypt, uuidv4, SALT_ROUNDS) => ({

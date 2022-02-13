@@ -29,57 +29,6 @@ const API_BASE_URL = '/api/v1/'
 
 const app = express()
 
-const createUser = ({
-  id = uuidv4(),
-  name,
-  email,
-  password,
-  uploadEntries = 0,
-  joinDate = new Date().toDateString(),
-}) => {
-  return bcrypt
-    .hash(password, SALT_ROUNDS)
-    .then((hash) => {
-      return {
-        id,
-        name,
-        email,
-        password: hash,
-        uploadEntries,
-        joinDate,
-      }
-    })
-    .catch((error) => console.log('Failed to create user', error))
-}
-
-const createResponse = ({ status, description = '', data = {} }) => ({
-  status,
-  description,
-  data,
-})
-
-const jwtSign = (dataToBeSigned, callback) => {
-  jwt.sign(dataToBeSigned, JWT_PRIVATE_KEY, { expiresIn: '1d' }, callback)
-}
-
-const usersInitPromise = [
-  createUser({
-    name: 'budi',
-    email: 'budi@gmail.com',
-    password: 'budi12',
-  }),
-  createUser({
-    name: 'riani',
-    email: 'riani@gmail.com',
-    password: 'riani12',
-  }),
-]
-
-let users
-Promise.all(usersInitPromise).then((values) => {
-  users = values
-})
-
 app.use(express.json())
 app.use(cors())
 
