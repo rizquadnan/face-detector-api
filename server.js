@@ -22,7 +22,7 @@ const auth = require('./controllers/auth')
 const user = require('./controllers/user')
 const image = require('./controllers/image')
 
-const JWT_PRIVATE_KEY = 'adnan-keren'
+const JWT_PRIVATE_KEY = 'e023da7092d3471e30edcef8a60d25024dbc442439c2ffdebeeeee665d9ebc1ac21ae9d70031319c58535f9868975f529629de31dd4ebac1c18bde4d18640e64'
 const PORT = 3001
 const SALT_ROUNDS = 10
 const API_BASE_URL = '/api/v1/'
