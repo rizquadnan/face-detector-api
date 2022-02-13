@@ -58,6 +58,7 @@ module.exports = {
           }),
         )
       } else {
+        console.log("ERROR: ", error);
         res.status(500).send(
           utils.createResponse({
             status: 'FAILED',
