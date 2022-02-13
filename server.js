@@ -6,11 +6,10 @@ const jwt = require('jsonwebtoken')
 const db = require('knex')({
   client: 'pg',
   connection: {
-    host: '127.0.0.1',
-    port: 5432,
-    user: '',
-    password: '',
-    database: 'face-recognition',
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
   },
 })
 const { ClarifaiStub, grpc } = require('clarifai-nodejs-grpc')
