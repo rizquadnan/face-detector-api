@@ -28,7 +28,6 @@ const SALT_ROUNDS = 10
 const jwt = require('jsonwebtoken')
 const JWT_PRIVATE_KEY = process.env.JWT_PRIVATE_KEY ?? "development-key";
 
-console.log("key", process.env.CLARAFAI_KEY);
 const { ClarifaiStub, grpc } = require('clarifai-nodejs-grpc')
 const clarafai = ClarifaiStub.grpc()
 const clarafaiMeta = new grpc.Metadata()
