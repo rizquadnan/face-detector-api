@@ -1,5 +1,5 @@
 # Description
-Express Postgresql backend for face detector app. Functionality:
+Express Postgresql backend for face detector app. Hosted on heroku. Functionality:
 1. API Authentication
 2. User sign up
 3. User sign in
