@@ -1,5 +1,7 @@
 const isProduction = process.env.NODE_ENV === "production";
 
+require('dotenv').config();
+
 const dbProductionConfig = {
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -24,12 +26,13 @@ const bcrypt = require('bcrypt')
 const SALT_ROUNDS = 10
 
 const jwt = require('jsonwebtoken')
-const JWT_PRIVATE_KEY = 'e023da7092d3471e30edcef8a60d25024dbc442439c2ffdebeeeee665d9ebc1ac21ae9d70031319c58535f9868975f529629de31dd4ebac1c18bde4d18640e64'
+const JWT_PRIVATE_KEY = process.env.JWT_PRIVATE_KEY ?? "development-key";
 
+console.log("key", process.env.CLARAFAI_KEY);
 const { ClarifaiStub, grpc } = require('clarifai-nodejs-grpc')
 const clarafai = ClarifaiStub.grpc()
 const clarafaiMeta = new grpc.Metadata()
-clarafaiMeta.set('authorization', 'Key e3e2fff270c541c4ab887d0ab7c1fbf2')
+clarafaiMeta.set('authorization', `Key ${process.env.CLARAFAI_KEY}`)
 
 const PORT = process.env.PORT ?? 3001
 
