@@ -1,6 +1,8 @@
 const isProduction = process.env.NODE_ENV === "production";
-
+const knex = require('knex')
 require('dotenv').config();
+
+const utils = require('../utils')
 
 const dbProductionConfig = {
   connectionString: process.env.DATABASE_URL,
@@ -13,12 +15,13 @@ const dbDevelopmentConfig = {
   port: 5432,
   user: '',
   password: '',
-  database: 'face-recognition',
+  database: 'facerecognition',
 };
-const db = require('knex')({
+const db = knex({
   client: 'pg',
   connection: isProduction ? dbProductionConfig : dbDevelopmentConfig,
 })
+utils.setupDB(db)
 
 const { v4: uuidv4 } = require('uuid')
 
