@@ -75,12 +75,12 @@ module.exports = {
   
       try {
         await db.transaction(async (trx) => {
-          await trx.insert({ email, hash: user.password }).into('login')
-  
           const result = await trx
-            .returning('*')
+            .returning("*")
             .insert({ name, email, joindate: new Date() })
-            .into('users')
+            .into("users");
+            
+          await trx.insert({ email, hash: user.password }).into('login')
   
           const userResult = result[0]
   
