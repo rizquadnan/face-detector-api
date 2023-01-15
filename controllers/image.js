@@ -6,7 +6,7 @@ module.exports = {
 
     clarafai.PostModelOutputs(
       {
-        model_id: 'a403429f2ddf4b49b307e318f00e528b',
+        model_id: "face-detection",
         inputs: [{ data: { image: { url: imageUrl } } }],
       },
       clarafaiMeta,
@@ -14,21 +14,21 @@ module.exports = {
         if (err) {
           res.status(500).send(
             utils.createResponse({
-              status: 'FAILED',
-              description: 'Failed to detect face',
-            }),
-          )
+              status: "FAILED",
+              description: "Failed to detect face",
+            })
+          );
         }
 
         res.send(
           utils.createResponse({
-            status: 'SUCCESS',
+            status: "SUCCESS",
             data: response.outputs[0].data.regions.map(
-              (region) => region.region_info.bounding_box,
+              (region) => region.region_info.bounding_box
             ),
-          }),
-        )
-      },
-    )
+          })
+        );
+      }
+    );
   }
 }
