@@ -6,6 +6,9 @@ Express Postgresql backend for face detector app. Hosted with Docker + railway.a
 4. Password encryptions
 5. Face detection using Clarafai API
 
+# API Documentation
+https://documenter.getpostman.com/view/22977269/2s8ZDU4P9g
+
 # Database schema
 ![Database ER diagram (crow's foot)](https://user-images.githubusercontent.com/52435643/154823318-964e916e-c7a9-4d86-94f5-2ce759901619.png)
 
