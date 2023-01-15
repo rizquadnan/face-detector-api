@@ -12,6 +12,9 @@ module.exports = {
       clarafaiMeta,
       (err, response) => {
         if (err) {
+          console.log('=======')
+          console.log('err', err);
+          console.log("=======");
           res.status(500).send(
             utils.createResponse({
               status: "FAILED",
